@@ -1,7 +1,8 @@
-a = [1, 2, 3, 4, 5, 6, 0]
-ind = int(input())
+import funcs
+import classes
 
-for i in range(len(a)-1, ind, -1):
-    a[i] = a[i-1]
+deck = funcs.prepare_deck(funcs.make_deck())
 
-print(a)
+b = classes.Box(10).receive_cards([deck.pop(0), deck.pop(0)])
+
+print(b.get_info())

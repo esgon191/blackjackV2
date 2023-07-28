@@ -1,4 +1,4 @@
-import func
+import funcs
 
 class Card:
     def __init__(self, iden):
@@ -7,13 +7,13 @@ class Card:
 
 class Box:
     def __init__(self, bet):
-        self.bet = 0
+        self.bet = bet
         self.cards = []
         self.points = 0
         self.state = 'def' # def, ins, sur
 
     def count_points(self, card):
-         if card[0] == 'A':
+        if card[0] == 'A':
             if self.points <= 21:
                 self.points += 11
 
@@ -25,21 +25,30 @@ class Box:
 
         else:
             self.points += int(card[0])        
+        
+    def receive_card(self, card):
+        self.cards.append(card)
+        self.count_points(card)
+        return self
+        
 
     def receive_cards(self, cards):
         for card in cards:
             self.cards.append(card)
             self.count_points(card)
-
+        return self
 
     def set_bet(self, bet):
         self.bet = bet
-    
+        return self    
 
     def get_bet(self):
         mid = self.bet
         self.bet = 0
         return mid
+    
+    def get_info(self):
+        return [self.bet, self.cards, self.points, self.state]
 
 class Character:
     def __init__(self, money, boxes):
@@ -58,11 +67,13 @@ class Player(Character):
         self.money -= bet
 
     def get_bet(self, box_id): #выигрыш (иное получение) ставки идет с бокса, операции со ставкой идут внутри бокса
-        self.money += self.boxes[box_id].get_bet()
+        mid = self.boxes[box_id].get_bet()
+        self.money += mid
+        return mid
 
     def surrender(self, box_id):
-        self.money += int(0.5 * self.boxes[box_id].get_set())
-        self.boxes[box_id].stat = 'sur'
+        self.money += int(0.5 * self.boxes[box_id].get_bet())
+        self.boxes[box_id].state = 'sur'
 
     def split(self, box_id):
         mid = self.boxes[box_id] #сплитуемый бокс
@@ -70,18 +81,18 @@ class Player(Character):
         for i in range(len(self.boxes)-1, box_id, -1):
             self.boxes[i] = self.boxes[i-1]
 
-        self.boxes[box_id] = Box(int(mid.get_bet() * 0.5).receive_card(mid.cards[0]))
-        self.boxes[box_id+1] = self.boxes[box_id]
+        self.boxes[box_id] = Box(int(mid.bet * 0.5)).receive_card(mid.cards[0])
+        self.boxes[box_id+1] = Box(int(mid.bet * 0.5)).receive_card(mid.cards[0])
 
     def double(self, card, box_id):
         self.receive_card(card, box_id)
-        mid = self.boxes[box_id].get_bet()
-        self.boxes[box_id].set_bet(2 * mid)
+        mid = self.get_bet(box_id)
+        self.set_bet(2 * mid, box_id)
 
 
     def insurance(self, bet, box_id):
         self.set_bet(bet, box_id)
-        self.boxes[box_id].stat = 'ins'
+        self.boxes[box_id].state = 'ins'
 
 class Dealer(Character):
     def play(self):
