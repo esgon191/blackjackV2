@@ -14,4 +14,3 @@ def prepare_deck(old): #мешает колоду
         new.append(old.pop(random.randinti()))
     return new
 
-
