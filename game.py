@@ -44,11 +44,11 @@ while True:
         print(p.money)
     if inp == 'split':
         inp = int(input())
-        p.split(inp-1)
+        print(p.split(inp-1))
         print(p.money)
     if inp == 'double':
         inp = int(input())
-        p.double(deck.pop(0), inp-1)
+        print(p.double(deck.pop(0), inp-1))
         print(p.money)
     if inp == 'ins':
         inp = int(input())

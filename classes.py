@@ -63,8 +63,13 @@ class Character:
 
 class Player(Character):
     def set_bet(self, bet, box_id): #ставка на бокс с 
-        self.boxes[box_id].set_bet(bet)
-        self.money -= bet
+        if self.money >= bet:   
+            self.boxes[box_id].set_bet(bet)
+            self.money -= bet
+            return 'succes'
+
+        else:
+            return 'not_enough_money'
 
     def get_bet(self, box_id): #выигрыш (иное получение) ставки идет с бокса, операции со ставкой идут внутри бокса
         mid = self.boxes[box_id].get_bet()
@@ -72,22 +77,35 @@ class Player(Character):
         return mid
 
     def surrender(self, box_id):
-        self.money += int(0.5 * self.boxes[box_id].get_bet())
+        self.money += int(0.5 * self.get_bet(box_id))
         self.boxes[box_id].state = 'sur'
 
     def split(self, box_id):
-        mid = self.boxes[box_id] #сплитуемый бокс
-        self.boxes.append(Box(0))
-        for i in range(len(self.boxes)-1, box_id, -1):
-            self.boxes[i] = self.boxes[i-1]
+        if len(self.boxes[box_id].cards) == 2 and self.boxes[box_id].cards[0] == self.boxes[box_id].cards[1]:
+            mid = self.boxes[box_id] #сплитуемый бокс
+            self.boxes.append(Box(0))
 
-        self.boxes[box_id] = Box(int(mid.bet * 0.5)).receive_card(mid.cards[0])
-        self.boxes[box_id+1] = Box(int(mid.bet * 0.5)).receive_card(mid.cards[0])
+            for i in range(len(self.boxes)-1, box_id, -1):
+                self.boxes[i] = self.boxes[i-1]
+
+            self.boxes[box_id] = Box(int(mid.bet * 0.5)).receive_card(mid.cards[0])
+            self.boxes[box_id+1] = Box(int(mid.bet * 0.5)).receive_card(mid.cards[0])
+            return 'succes'
+
+        else:
+            return 'wrong_cards'
+            
 
     def double(self, card, box_id):
-        self.receive_card(card, box_id)
         mid = self.get_bet(box_id)
-        self.set_bet(2 * mid, box_id)
+        res = self.set_bet(mid * 2, box_id) 
+        if res == 'succes':
+            self.receive_card(card, box_id)
+            return res
+
+        else:
+            self.set_bet(mid, box_id)
+            return res
 
 
     def insurance(self, bet, box_id):
