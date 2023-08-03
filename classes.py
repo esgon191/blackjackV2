@@ -10,7 +10,7 @@ class Box:
         self.bet = bet
         self.cards = []
         self.points = 0
-        self.state = 'def' # def, ins, sur
+        self.state = 'def' # def, ins, sur, lost, dbl, bj
 
     def count_points(self, card):
         if card[0] == 'A':
@@ -25,7 +25,15 @@ class Box:
 
         else:
             self.points += int(card[0])        
-        
+    
+    def check_state(self):
+        if self.points > 21:
+            self.state = 'lost'
+
+        if self.points == 21 and len(self.cards) == 2 and self.state != 'dbl':
+            self.state = 'bj' #blackJack
+    
+
     def receive_card(self, card):
         self.cards.append(card)
         self.count_points(card)
@@ -36,6 +44,7 @@ class Box:
         for card in cards:
             self.cards.append(card)
             self.count_points(card)
+            self.check_state()
         return self
 
     def set_bet(self, bet):
@@ -101,6 +110,8 @@ class Player(Character):
         res = self.set_bet(mid * 2, box_id) 
         if res == 'succes':
             self.receive_card(card, box_id)
+            self.boxes[box_id].state = 'dbl'
+            self.boxes[box_id+1].state = 'dbl'
             return res
 
         else:
