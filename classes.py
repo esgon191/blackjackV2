@@ -3,34 +3,46 @@ import funcs
 class Card:
     def __init__(self, iden):
         self.iden = iden
+    
+    def get_points(self):
+        if self.iden[0] == 'A':
+            return 11
+        
+        elif self.iden[0] in ['J', 'Q', 'K']:
+            return 10
 
+        else:
+            return int(self.iden[0])
+
+    def get_info(self):
+        return self.iden
 
 class Box:
     def __init__(self, bet):
         self.bet = bet
         self.cards = []
         self.points = 0
-        self.state = 'def' # def, ins, sur, lost, dbl, bj
+        self.state = 'def' # def, ins, sur, lost, dbl, bj, splt
 
     def count_points(self, card):
-        if card[0] == 'A':
+        if card.iden[0] == 'A':
             if self.points <= 21:
                 self.points += 11
 
             else:
                 self.points += 1
 
-        elif card[0] in ['J', 'Q', 'K']:
+        elif card.iden[0] in ['J', 'Q', 'K']:
             self.points += 10
 
         else:
-            self.points += int(card[0])        
+            self.points += int(card.iden[0])        
     
     def check_state(self):
         if self.points > 21:
             self.state = 'lost'
 
-        if self.points == 21 and len(self.cards) == 2 and self.state != 'dbl':
+        if self.points == 21 and len(self.cards) == 2 and self.state != 'splt':
             self.state = 'bj' #blackJack
     
 
@@ -57,7 +69,7 @@ class Box:
         return mid
     
     def get_info(self):
-        return [self.bet, self.cards, self.points, self.state]
+        return [self.bet, list(map(funcs.show_card, self.cards)), self.points, self.state]
 
 class Character:
     def __init__(self, money, boxes):
@@ -90,7 +102,8 @@ class Player(Character):
         self.boxes[box_id].state = 'sur'
 
     def split(self, box_id):
-        if len(self.boxes[box_id].cards) == 2 and self.boxes[box_id].cards[0] == self.boxes[box_id].cards[1]:
+        tens = ['10', 'J', 'Q', 'K']
+        if self.boxes[box_id].cards[0].get_points() == self.boxes[box_id].cards[1].get_points():
             mid = self.boxes[box_id] #сплитуемый бокс
             self.boxes.append(Box(0))
 
@@ -98,7 +111,9 @@ class Player(Character):
                 self.boxes[i] = self.boxes[i-1]
 
             self.boxes[box_id] = Box(int(mid.bet * 0.5)).receive_card(mid.cards[0])
-            self.boxes[box_id+1] = Box(int(mid.bet * 0.5)).receive_card(mid.cards[0])
+            self.boxes[box_id+1] = Box(int(mid.bet * 0.5)).receive_card(mid.cards[1])
+            self.boxes[box_id].state = 'splt'
+            self.boxes[box_id+1].state = 'splt'
             return 'succes'
 
         else:
@@ -111,7 +126,6 @@ class Player(Character):
         if res == 'succes':
             self.receive_card(card, box_id)
             self.boxes[box_id].state = 'dbl'
-            self.boxes[box_id+1].state = 'dbl'
             return res
 
         else:
@@ -125,5 +139,7 @@ class Player(Character):
 
 class Dealer(Character):
     def play(self):
-        self.receive_card(card, 0)
+        while self.boxes[0].points < 17:
+            self.receive_card(card, 0)
+
     
