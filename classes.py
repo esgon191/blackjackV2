@@ -49,6 +49,7 @@ class Box:
     def receive_card(self, card):
         self.cards.append(card)
         self.count_points(card)
+        self.check_state()
         return self
         
 
@@ -67,7 +68,10 @@ class Box:
         mid = self.bet
         self.bet = 0
         return mid
-    
+
+    def get_win(self, k):
+        self.bet *=     k
+
     def get_info(self):
         return [self.bet, list(map(funcs.show_card, self.cards)), self.points, self.state]
 
@@ -79,7 +83,6 @@ class Character:
 
     def receive_card(self, card, box_id):
         self.boxes[box_id].receive_card(card)
-
 
 
 class Player(Character):
@@ -96,10 +99,12 @@ class Player(Character):
         mid = self.boxes[box_id].get_bet()
         self.money += mid
         return mid
+    
 
     def surrender(self, box_id):
         self.money += int(0.5 * self.get_bet(box_id))
         self.boxes[box_id].state = 'sur'
+        return 'succes'
 
     def split(self, box_id):
         tens = ['10', 'J', 'Q', 'K']
@@ -126,6 +131,7 @@ class Player(Character):
         if res == 'succes':
             self.receive_card(card, box_id)
             self.boxes[box_id].state = 'dbl'
+            self.boxes[box_id].check_state()
             return res
 
         else:
@@ -136,10 +142,11 @@ class Player(Character):
     def insurance(self, bet, box_id):
         self.set_bet(bet, box_id)
         self.boxes[box_id].state = 'ins'
+        return 'succes'
 
 class Dealer(Character):
-    def play(self):
+    def play(self, deck):
         while self.boxes[0].points < 17:
-            self.receive_card(card, 0)
+            self.receive_card(deck.pop(0), 0)
 
     
